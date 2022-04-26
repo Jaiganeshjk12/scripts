@@ -16,5 +16,5 @@ options:"
 ```
 ##### Example
 ```
- ./imagepush.sh -t example.com -v 4.5.14
+ ./imagepush.sh -t repo.example.com -v 4.5.14
 ```
