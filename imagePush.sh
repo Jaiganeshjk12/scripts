@@ -40,13 +40,18 @@ fi
 
 IMAGES=$(podman run --rm -it gcr.io/kasten-images/k10offline:${K10_VERSION} list-images | tr -d '\r')
 
+echo
 echo =====Commands to pull the images locally===============
+echo
+
 for i in ${IMAGES}
 do
 echo podman pull $i
 done
 
+echo
 echo =====Commands to re-tag the images with your image registry ===============
+echo
 
 for j in ${IMAGES}
 do
@@ -62,7 +67,9 @@ do
     fi
 done
 
+echo
 echo =====Commands to push the images to your image registry ===============
+echo
 
 for j in ${IMAGES}
 do
