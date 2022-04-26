@@ -6,8 +6,10 @@ This script uses `K10offline` tool and is particlarly useful when customer's doe
 
 USAGE.
 Use the below options to input the target image registry and K10 version details"
+```
 Syntax: ./imagepush.sh [-t|v|h] 
 options:"
   -t     Target image registry to which the images needs to be pushed.(Required)
   -v     K10 version.(Required)
   -h     Print this Help.
+```
