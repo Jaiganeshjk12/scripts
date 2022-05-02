@@ -4,12 +4,10 @@
 set -euo pipefail
 
 #requirements
-if ! hash podman 2>/dev/null; then
-  echo "podman command not found! Please install podman and run the script again"
-  exit 1
-fi
+#podman or docker
 
 
+#helpFunction with the usage details
 helpFunction()
 {
    # Display Help
@@ -19,15 +17,20 @@ helpFunction()
    echo "options:"
    echo "-t     Target image registry to which the images needs to be pushed."
    echo "-v     K10 version."
+   echo "-c     Client used to push/pull images - Supported arguments are docker & podman(defaults to podman"
    echo "-h     Print this Help."
    exit 1
 }
 
-while getopts "t:v:h:" opt
+#default client to use podman if the option is not provided while running the script
+CLIENT=podman
+
+while getopts "t:v:h:c:" opt
 do
    case "$opt" in
       t ) TARGET_REGISTRY="$OPTARG" ;;
       v ) K10_VERSION="$OPTARG" ;;
+      c ) CLIENT="$OPTARG" ;;
       h ) helpFunction ;;
       ? ) helpFunction ;; # Print helpFunction in case parameter is non-existent
    esac
@@ -38,7 +41,7 @@ then
     helpFunction
 fi
 
-IMAGES=$(podman run --rm -it gcr.io/kasten-images/k10offline:${K10_VERSION} list-images | tr -d '\r')
+IMAGES=$(${CLIENT} run --rm -it gcr.io/kasten-images/k10offline:${K10_VERSION} list-images | tr -d '\r')
 
 echo
 echo =====Commands to pull the images locally===============
@@ -46,7 +49,7 @@ echo
 
 for i in ${IMAGES}
 do
-echo podman pull $i
+echo ${CLIENT} pull $i
 done
 
 echo
@@ -61,9 +64,9 @@ do
 
     if [[ $j = gcr.* ]]
     then
-        echo "podman tag ${j} ${TARGET_REGISTRY}/${IMAGENAMEWITHOUTTAG}:${TAG}"
+        echo "${CLIENT} tag ${j} ${TARGET_REGISTRY}/${IMAGENAMEWITHOUTTAG}:${TAG}"
     else
-        echo "podman tag ${j} ${TARGET_REGISTRY}/${IMAGENAMEWITHOUTTAG}:${K10TAG}"
+        echo "${CLIENT} tag ${j} ${TARGET_REGISTRY}/${IMAGENAMEWITHOUTTAG}:${K10TAG}"
     fi
 done
 
@@ -78,9 +81,9 @@ do
     IMAGENAMEWITHOUTTAG=$(echo $j | awk -F '/' '{print $NF}'|cut -f 1 -d ':')
     if [[ $j = gcr.* ]]
     then
-        echo podman push ${TARGET_REGISTRY}/${IMAGENAMEWITHOUTTAG}:${TAG}
+        echo ${CLIENT} push ${TARGET_REGISTRY}/${IMAGENAMEWITHOUTTAG}:${TAG}
     else
-        echo podman push ${TARGET_REGISTRY}/${IMAGENAMEWITHOUTTAG}:${K10TAG}
+        echo ${CLIENT} push ${TARGET_REGISTRY}/${IMAGENAMEWITHOUTTAG}:${K10TAG}
     fi
 done
 
