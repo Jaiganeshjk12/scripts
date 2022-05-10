@@ -50,7 +50,7 @@ fi
 IMAGES=$(${CLIENT} run --rm -it gcr.io/kasten-images/k10offline:${K10_VERSION} list-images | tr -d '\r')
 
 echo
-echo -e $BOLD $GREEN =====Commands to pull the images locally=============== $NC
+echo -e $GREEN $BOLD =====Commands to pull the images locally=============== $NC
 echo
 
 for i in ${IMAGES}
@@ -59,7 +59,7 @@ echo ${CLIENT} pull $i
 done
 
 echo
-echo -e $BOLD $GREEN =====Commands to re-tag the images with your image registry =============== $NC
+echo -e $GREEN $BOLD =====Commands to re-tag the images with your image registry =============== $NC
 echo
 
 for j in ${IMAGES}
@@ -77,7 +77,7 @@ do
 done
 
 echo
-echo -e $BOLD $GREEN=====Commands to push the images to your image registry =============== $NC
+echo -e $GREEN $BOLD =====Commands to push the images to your image registry =============== $NC
 echo
 
 for j in ${IMAGES}
