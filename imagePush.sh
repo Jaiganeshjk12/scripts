@@ -55,7 +55,13 @@ echo
 
 for i in ${IMAGES}
 do
-echo ${CLIENT} pull $i
+    #configmap-reloader image from the k10offline tool is without the prefix `docker.io` and errors if docker.io is not listed as unqualified search registry. Hack to add docker.io to the configmap-reloaded image
+    if [[ ${i} == jimmidyson* ]]
+    then
+        echo ${CLIENT} pull docker.io\/$i
+    else
+        echo ${CLIENT} pull $i
+    fi
 done
 
 echo
@@ -67,8 +73,11 @@ do
     TAG=$(echo $j | cut -f 2 -d ':')
     K10TAG=k10-${TAG}
     IMAGENAMEWITHOUTTAG=$(echo $j | awk -F '/' '{print $NF}'|cut -f 1 -d ':')
-
-    if [[ $j = gcr.* ]]
+    #configmap-reloader image from the k10offline tool is without the prefix `docker.io` and errors if docker.io is not listed as unqualified search registry. Hack to add docker.io to the configmap-reloaded image
+    if [[ $j = jimmidyson* ]]
+    then
+        echo "${CLIENT} tag docker.io/${j} ${TARGET_REGISTRY}/${IMAGENAMEWITHOUTTAG}:${K10TAG}"
+    elif [[ $j = gcr.* ]]
     then
         echo "${CLIENT} tag ${j} ${TARGET_REGISTRY}/${IMAGENAMEWITHOUTTAG}:${TAG}"
     else
