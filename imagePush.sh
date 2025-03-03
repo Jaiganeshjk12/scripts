@@ -47,7 +47,7 @@ then
     helpFunction
 fi
 
-IMAGES=$(${CLIENT} run --rm -it gcr.io/kasten-images/k10offline:${K10_VERSION} list-images | tr -d '\r')
+IMAGES=$(${CLIENT} run --rm -it gcr.io/kasten-images/k10tools:${K10_VERSION} image list | tr -d '\r')
 
 echo
 echo -e $GREEN $BOLD =====Commands to pull the images locally=============== $NC
@@ -55,7 +55,7 @@ echo
 
 for i in ${IMAGES}
 do
-    #configmap-reloader image from the k10offline tool is without the prefix `docker.io` and errors if docker.io is not listed as unqualified search registry. Hack to add docker.io to the configmap-reloaded image
+    #configmap-reloader image from the k10tools is without the prefix `docker.io` and errors if docker.io is not listed as unqualified search registry. Hack to add docker.io to the configmap-reloaded image
     if [[ ${i} == jimmidyson* ]]
     then
         echo ${CLIENT} pull docker.io\/$i
@@ -73,7 +73,7 @@ do
     TAG=$(echo $j | cut -f 2 -d ':')
     K10TAG=k10-${TAG}
     IMAGENAMEWITHOUTTAG=$(echo $j | awk -F '/' '{print $NF}'|cut -f 1 -d ':')
-    #configmap-reloader image from the k10offline tool is without the prefix `docker.io` and errors if docker.io is not listed as unqualified search registry. Hack to add docker.io to the configmap-reloaded image
+    #configmap-reloader image from the k10tools is without the prefix `docker.io` and errors if docker.io is not listed as unqualified search registry. Hack to add docker.io to the configmap-reloaded image
     if [[ $j = jimmidyson* ]]
     then
         echo "${CLIENT} tag docker.io/${j} ${TARGET_REGISTRY}/${IMAGENAMEWITHOUTTAG}:${K10TAG}"
