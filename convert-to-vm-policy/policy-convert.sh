@@ -2,6 +2,7 @@
 
 # Configuration
 DRY_RUN=${DRY_RUN:-false}
+EXCLUDE_POLICIES=${EXCLUDE_POLICIES:-""}
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -19,7 +20,12 @@ while [[ $# -gt 0 ]]; do
       echo "  --help       Show this help message"
       echo ""
       echo "Environment variables:"
-      echo "  DRY_RUN=true   Alternative way to enable dry run mode"
+      echo "  DRY_RUN=true              Alternative way to enable dry run mode"
+      echo "  EXCLUDE_POLICIES=\"p1,p2\"   Comma-separated list of policy names to exclude"
+      echo ""
+      echo "Examples:"
+      echo "  DRY_RUN=true ./policy_convert.sh"
+      echo "  EXCLUDE_POLICIES=\"mysql-backup,test-policy\" ./policy_convert.sh --dry-run"
       exit 0
       ;;
     *)
@@ -34,6 +40,27 @@ done
 patch_policy_to_vm_scope() {
   local policy="$1"
   echo "Patching policy: $policy"
+  
+  # Check if policy is in the exclusion list
+  if [[ -n "$EXCLUDE_POLICIES" ]]; then
+    # Remove trailing comma if present and split into array
+    local clean_exclude_list="${EXCLUDE_POLICIES%,}"
+    IFS=',' read -ra EXCLUDE_ARRAY <<< "$clean_exclude_list"
+    
+    for exclude_policy in "${EXCLUDE_ARRAY[@]}"; do
+      exclude_policy=$(echo "$exclude_policy" | xargs)  # Trim whitespace
+      if [[ -n "$exclude_policy" && "$policy" == "$exclude_policy" ]]; then
+        echo "  ⏭️  Skipping $policy (excluded via EXCLUDE_POLICIES)"
+        return 0
+      fi
+    done
+  fi
+  
+  # Skip system policies with empty or invalid selectors
+  if [[ "$policy" == "k10-system-reports-policy" ]]; then
+    echo "  ⏭️  Skipping $policy (system policy with empty selector)"
+    return 0
+  fi
   
   # Get the current value
   local current_value=$(kubectl get policies.config.kio.kasten.io "$policy" -n kasten-io -o jsonpath='{.spec.selector.matchExpressions[0].values[0]}')
@@ -56,7 +83,7 @@ patch_policy_to_vm_scope() {
     echo "  🔍 [DRY RUN] Would apply patch:"
     echo "    - Change selector key: k10.kasten.io/appNamespace → k10.kasten.io/virtualMachineRef"
     echo "    - Change selector value: $current_value → $current_value/*"
-    echo "    - Remove exportParameters section"
+    echo "    - Remove migrationToken and receiveString from exportParameters"
     echo "  💡 [DRY RUN] No actual changes made"
   else
     echo "  🔧 Applying patch..."
@@ -74,7 +101,11 @@ patch_policy_to_vm_scope() {
       },
       {
         "op": "remove",
-        "path": "/spec/actions/1/exportParameters"
+        "path": "/spec/actions/1/exportParameters/migrationToken"
+      },
+      {
+        "op": "remove",
+        "path": "/spec/actions/1/exportParameters/receiveString"
       }
     ]'
     
@@ -111,6 +142,12 @@ if [[ "$DRY_RUN" == "true" ]]; then
 else
   echo "🚀 === Starting Policy Migration ==="
 fi
+
+# Debug: Show exclusion list if set
+if [[ -n "$EXCLUDE_POLICIES" ]]; then
+  echo "📋 Exclusion list: [$EXCLUDE_POLICIES]"
+fi
+
 echo ""
 
 for policy in $(kubectl get policies.config.kio.kasten.io -n kasten-io -o jsonpath='{range .items[?(@.spec.selector.matchExpressions[0].key=="k10.kasten.io/appNamespace")]}{.metadata.name}{"\n"}{end}'); do
