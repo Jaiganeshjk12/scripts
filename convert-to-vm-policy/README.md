@@ -224,20 +224,6 @@ Error: policies.config.kio.kasten.io "policy-name" is forbidden
 - Ensure kubectl context has proper RBAC permissions
 - Verify access to `kasten-io` namespace
 
-**Policy Not Found:**
-```bash
-Error: policies.config.kio.kasten.io "policy-name" not found
-```
-- Policy may have been deleted between discovery and patching
-- Run dry run to verify current state
-
-**Export Parameters Remove Failed:**
-```bash
-Error: remove operation does not apply: doc is missing path
-```
-- Policy structure may differ from expected format
-- Check policy manually with `kubectl get policy <name> -o yaml`
-
 ### Debug Commands
 
 Check current policy status:
